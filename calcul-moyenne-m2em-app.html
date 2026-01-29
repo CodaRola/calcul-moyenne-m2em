@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcul Moyenne M2EM</title>
+    
+    <!-- PWA Configuration -->
+    <meta name="description" content="Calculateur de moyenne pour Master 2 Exploitation Minière - UAM Béjaïa">
+    <meta name="theme-color" content="#1a4d2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="M2EM">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%231a4d2e' width='512' height='512'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='280' font-weight='bold' fill='%23d4af37'%3EM%3C/text%3E%3C/svg%3E">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a4d2e;
+            --secondary: #4f8a65;
+            --accent: #d4af37;
+            --bg: #f8f6f1;
+            --card: #ffffff;
+            --text: #2c2c2c;
+            --text-light: #6b6b6b;
+            --border: #e0ddd4;
+            --success: #2d8659;
+            --warning: #c97435;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background: linear-gradient(135deg, #f8f6f1 0%, #ebe8df 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.01) 2px, rgba(0,0,0,0.01) 4px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+            text-shadow: 2px 2px 0 rgba(212, 175, 55, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 
+                0 1px 3px rgba(0,0,0,0.05),
+                0 10px 30px rgba(26, 77, 46, 0.08);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent), var(--secondary));
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .module-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary);
+            flex: 1;
+        }
+
+        .coefficient-badge {
+            background: var(--accent);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .inputs-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="number"] {
+            padding: 0.9rem 1.2rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Source Sans Pro', sans-serif;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 138, 101, 0.1);
+        }
+
+        input[type="number"]:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .module-result {
+            background: linear-gradient(135deg, var(--bg) 0%, #ebe8df 100%);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .final-result {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            text-align: center;
+            box-shadow: 
+                0 10px 40px rgba(26, 77, 46, 0.3),
+                0 1px 3px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.8s ease-out 0.3s backwards;
+        }
+
+        .final-result h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .moyenne-value {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .decision {
+            font-size: 1.8rem;
+            font-weight: 600;
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 1rem;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .decision.admis {
+            background: rgba(45, 134, 89, 0.3);
+            box-shadow: 0 0 20px rgba(45, 134, 89, 0.4);
+        }
+
+        .decision.rattrapage {
+            background: rgba(201, 116, 53, 0.3);
+            box-shadow: 0 0 20px rgba(201, 116, 53, 0.4);
+        }
+
+        .reset-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.6);
+            transform: translateY(-2px);
+        }
+
+        .signature {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            opacity: 0.7;
+            animation: fadeInUp 1s ease-out 0.5s backwards;
+        }
+
+        .signature-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.1em;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.15s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.25s; }
+        .card:nth-child(5) { animation-delay: 0.3s; }
+        .card:nth-child(6) { animation-delay: 0.35s; }
+        .card:nth-child(7) { animation-delay: 0.4s; }
+        .card:nth-child(8) { animation-delay: 0.45s; }
+        .card:nth-child(9) { animation-delay: 0.5s; }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .inputs-row {
+                grid-template-columns: 1fr;
+            }
+
+            .moyenne-value {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calcul de Moyenne</h1>
+            <p class="subtitle">Master 2 Exploitation Minière</p>
+            <p class="subtitle" style="margin-top: 0.5rem; font-size: 0.95rem;">Promo 2025/26 - UAM Béjaïa</p>
+        </header>
+
+        <div id="modules-container"></div>
+
+        <div class="final-result">
+            <h2>Moyenne Générale</h2>
+            <div class="moyenne-value" id="moyenne-generale">--</div>
+            <div class="decision" id="decision">En attente</div>
+            <button class="reset-btn" onclick="resetAll()">Réinitialiser tout</button>
+        </div>
+
+        <div class="signature">
+            <div class="signature-name">MHD</div>
+            <div>Développé avec passion ✨</div>
+        </div>
+    </div>
+
+    <script>
+        const modules = [
+            { name: 'Géotechnique minière', hasTD: true, hasExam: true, coef: 3 },
+            { name: 'Creusement et soutènement des excavations', hasTD: true, hasExam: true, coef: 3 },
+            { name: 'Projet des mines', hasTD: true, hasExam: true, coef: 3 },
+            { name: 'Valorisation des ressources minérales', hasTD: true, hasExam: true, coef: 2 },
+            { name: 'Aérage des mines', hasTD: true, hasExam: true, coef: 2 },
+            { name: 'Logiciel de conception', hasTD: true, hasExam: false, coef: 1 },
+            { name: 'Recherche documentaire et conception de mémoire', hasTD: false, hasExam: true, coef: 1 },
+            { name: 'Géologie générale', hasTD: false, hasExam: true, coef: 1 },
+            { name: 'Management des entreprises', hasTD: false, hasExam: true, coef: 1 }
+        ];
+
+        function createModuleCard(module, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="module-header">
+                    <div class="module-name">${module.name}</div>
+                    <div class="coefficient-badge">Coef. ${module.coef}</div>
+                </div>
+                <div class="inputs-row">
+                    ${module.hasTD ? `
+                        <div class="input-group">
+                            <label>Note TD / 20</label>
+                            <input type="number" id="td-${index}" min="0" max="20" step="0.5" 
+                                   oninput="calculateModule(${index})" placeholder="--">
+                        </div>
+                    ` : ''}
+                    ${module.hasExam ? `
+                        <div class="input-group">
+                            <label>Note Examen / 20</label>
+                            <input type="number" id="exam-${index}" min="0" max="20" step="0.5" 
+                                   oninput="calculateModule(${index})" placeholder="--">
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="module-result">
+                    <span class="result-label">Moyenne du module</span>
+                    <span class="result-value" id="result-${index}">--</span>
+                </div>
+            `;
+            return card;
+        }
+
+        function calculateModule(index) {
+            const module = modules[index];
+            let moyenne = 0;
+            
+            if (module.hasTD && module.hasExam) {
+                const td = parseFloat(document.getElementById(`td-${index}`).value);
+                const exam = parseFloat(document.getElementById(`exam-${index}`).value);
+                if (!isNaN(td) && !isNaN(exam)) {
+                    moyenne = td * 0.4 + exam * 0.6;
+                }
+            } else if (module.hasTD) {
+                const td = parseFloat(document.getElementById(`td-${index}`).value);
+                if (!isNaN(td)) {
+                    moyenne = td;
+                }
+            } else if (module.hasExam) {
+                const exam = parseFloat(document.getElementById(`exam-${index}`).value);
+                if (!isNaN(exam)) {
+                    moyenne = exam;
+                }
+            }
+            
+            if (moyenne > 0) {
+                document.getElementById(`result-${index}`).textContent = moyenne.toFixed(2);
+            } else {
+                document.getElementById(`result-${index}`).textContent = '--';
+            }
+            
+            calculateFinal();
+        }
+
+        function calculateFinal() {
+            let totalPondere = 0;
+            let totalCoef = 0;
+            
+            modules.forEach((module, index) => {
+                const resultText = document.getElementById(`result-${index}`).textContent;
+                if (resultText !== '--') {
+                    const moyenne = parseFloat(resultText);
+                    totalPondere += moyenne * module.coef;
+                    totalCoef += module.coef;
+                }
+            });
+            
+            if (totalCoef > 0) {
+                const moyenneGenerale = totalPondere / totalCoef;
+                document.getElementById('moyenne-generale').textContent = moyenneGenerale.toFixed(2);
+                
+                const decisionEl = document.getElementById('decision');
+                if (moyenneGenerale >= 10) {
+                    decisionEl.textContent = '✓ Admis';
+                    decisionEl.className = 'decision admis';
+                } else {
+                    decisionEl.textContent = '⚠ Rattrapage';
+                    decisionEl.className = 'decision rattrapage';
+                }
+            } else {
+                document.getElementById('moyenne-generale').textContent = '--';
+                document.getElementById('decision').textContent = 'En attente';
+                document.getElementById('decision').className = 'decision';
+            }
+        }
+
+        function resetAll() {
+            modules.forEach((module, index) => {
+                if (module.hasTD) {
+                    document.getElementById(`td-${index}`).value = '';
+                }
+                if (module.hasExam) {
+                    document.getElementById(`exam-${index}`).value = '';
+                }
+                document.getElementById(`result-${index}`).textContent = '--';
+            });
+            document.getElementById('moyenne-generale').textContent = '--';
+            document.getElementById('decision').textContent = 'En attente';
+            document.getElementById('decision').className = 'decision';
+        }
+
+        // Initialize
+        const container = document.getElementById('modules-container');
+        modules.forEach((module, index) => {
+            container.appendChild(createModuleCard(module, index));
+        });
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(registration => console.log('Service Worker enregistré'))
+                .catch(error => console.log('Erreur Service Worker:', error));
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Create install button
+            const installBtn = document.createElement('button');
+            installBtn.textContent = '📱 Installer l\'application';
+            installBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #1a4d2e 0%, #4f8a65 100%);
+                color: white;
+                border: none;
+                padding: 1rem 1.5rem;
+                border-radius: 30px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(26, 77, 46, 0.4);
+                z-index: 1000;
+                animation: fadeInUp 0.5s ease-out;
+            `;
+            
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.remove();
+                    }
+                    deferredPrompt = null;
+                }
+            });
+            
+            document.body.appendChild(installBtn);
+        });
+
+        // Hide install button if already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('Application installée avec succès!');
+        });
+    </script>
+</body>
+</html>
